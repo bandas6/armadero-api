@@ -1,0 +1,44 @@
+{
+  "name": "artemadero-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "API de Artemadero - Express + TypeScript + Mongoose",
+  "scripts": {
+    "dev": "nodemon",
+    "dev:tsx": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "seed": "tsx src/seed/seed.ts",
+    "create-admin": "tsx src/seed/create-admin.ts",
+    "fotos:catalogo": "node scripts/preparar-catalogo-fotos.mjs \"../imagenes y documentos\"",
+    "plantilla": "tsx src/seed/plantilla-catalogo.ts",
+    "importar": "tsx src/seed/importar-catalogo.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.8.3",
+    "multer": "^2.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^22.10.1",
+    "nodemon": "^3.1.14",
+    "sharp": "^0.35.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
