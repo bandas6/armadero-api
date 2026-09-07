@@ -10,14 +10,30 @@ export class ProductNotFoundError extends Error {
   }
 }
 
-/** Ficha completa de un producto: una sola lectura, variantes e imagenes ya embebidas. */
+/**
+ * Ficha completa de un producto: una sola lectura, variantes e imagenes ya embebidas.
+ * Trae ademas la pieza gemela en el otro material, resumida como tarjeta: la ficha la
+ * muestra en su propio bloque y es una de las tres apariciones del corte tejido/madera
+ * (design/PROMPT-4-ficha.md). Si no hay gemela, el campo viene en null y la ficha omite
+ * el bloque.
+ */
 export async function getProductBySlug(slug: string) {
   const product = await Product.findOne({ slug, active: true })
     .populate('category', 'name slug parent material')
+    .populate({
+      path: 'twinProduct',
+      match: { active: true },
+      select: TWIN_FIELDS,
+      populate: { path: 'category', select: 'name slug parent material' },
+    })
     .lean();
 
   if (!product) throw new ProductNotFoundError(slug);
-  return product;
+
+  // `twinProduct` viene poblado (o null si la gemela quedo inactiva o no existe): el
+  // tipo de Mongoose sigue siendo el del ref sin poblar, de ahi el paso por unknown.
+  const { twinProduct, ...rest } = product as typeof product & { twinProduct?: unknown };
+  return { ...rest, twin: twinProduct ? toCard(twinProduct as unknown as RawCard) : null };
 }
 
 /**
@@ -70,8 +86,64 @@ async function resolveLeafCategoryIds(
   return leafIds.filter((id) => byId.get(id)?.material === material);
 }
 
+/**
+ * Campos de tarjeta. Las medidas entran aqui a proposito: en esta direccion de diseno la
+ * cedula de medidas va en TODAS las tarjetas, no solo en la ficha, y sin ellas el
+ * catalogo pierde lo que la clienta considera el dato principal (design/PROMPT-3-catalogo.md).
+ * Se proyectan solo los subcampos de medida de las variantes, no el arreglo entero.
+ */
 const CARD_FIELDS =
-  'name slug shortDescription primaryImageUrl priceFrom priceTo hasPrice personalizable status category position featured createdAt';
+  'name slug shortDescription primaryImageUrl priceFrom priceTo hasPrice personalizable status category position featured createdAt' +
+  ' variants.seats variants.widthCm variants.heightCm variants.depthCm variants.sizeLabel variants.isDefault variants.active';
+
+/** Igual que la tarjeta, para la pieza gemela que muestra la ficha. */
+const TWIN_FIELDS = CARD_FIELDS;
+
+type RawVariant = {
+  seats?: number;
+  widthCm?: number;
+  heightCm?: number;
+  depthCm?: number;
+  sizeLabel?: string;
+  isDefault?: boolean;
+  active?: boolean;
+};
+
+type RawCard = Record<string, unknown> & { variants?: RawVariant[] };
+
+/**
+ * Medidas que la tarjeta muestra: las de la variante por defecto (la que el comprador ve
+ * primero). Un mueble con varias medidas se explora entrando a la ficha.
+ */
+function cardMeasures(variants: RawVariant[] | undefined) {
+  if (!variants?.length) return null;
+  const actives = variants.filter((v) => v.active !== false);
+  const pool = actives.length ? actives : variants;
+  const v = pool.find((x) => x.isDefault) ?? pool[0];
+  if (!v) return null;
+  if (
+    v.seats === undefined &&
+    v.widthCm === undefined &&
+    v.heightCm === undefined &&
+    v.depthCm === undefined &&
+    !v.sizeLabel
+  ) {
+    return null;
+  }
+  return {
+    seats: v.seats,
+    widthCm: v.widthCm,
+    heightCm: v.heightCm,
+    depthCm: v.depthCm,
+    sizeLabel: v.sizeLabel,
+  };
+}
+
+/** Cambia el arreglo de variantes proyectado por las medidas ya resueltas. */
+function toCard(doc: RawCard) {
+  const { variants, ...rest } = doc;
+  return { ...rest, measures: cardMeasures(variants) };
+}
 
 const SORT_MAP: Record<ProductListQuery['sort'], Record<string, 1 | -1>> = {
   destacados: { featured: -1, position: 1, createdAt: -1 },
@@ -101,6 +173,15 @@ export async function listProducts(query: ProductListQuery) {
     if (query.maxPrice !== undefined) filter.priceFrom.$lte = query.maxPrice;
   }
 
+  // "Se fabrica a la medida": un caso de primera clase del catalogo, no un adorno.
+  if (query.personalizable !== undefined) filter.personalizable = query.personalizable;
+
+  // "Entrega inmediata": lo que ya esta hecho en el local, sin esperar fabricacion.
+  if (query.disponible) filter.status = 'AVAILABLE';
+
+  // Puestos: consulta directa sobre el arreglo embebido (indice multikey de variantes).
+  if (query.seats !== undefined) filter['variants.seats'] = query.seats;
+
   if (query.q) filter.$text = { $search: query.q };
 
   const skip = (query.page - 1) * query.pageSize;
@@ -116,5 +197,5 @@ export async function listProducts(query: ProductListQuery) {
     Product.countDocuments(filter),
   ]);
 
-  return { items, total, page: query.page, pageSize: query.pageSize };
+  return { items: items.map((i) => toCard(i as RawCard)), total, page: query.page, pageSize: query.pageSize };
 }

@@ -8,7 +8,8 @@ import type {
   AdminProductUpdate,
 } from '../schemas/admin-product.schema.js';
 
-const FEATURED_LIMIT = 8;
+// Nueve: el muestrario del home es una retícula de nueve (design/PROMPT-2-home.md).
+const FEATURED_LIMIT = 9;
 
 function notFound(): never {
   throw new NotFoundError('No encontramos este mueble.');

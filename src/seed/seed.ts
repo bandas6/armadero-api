@@ -118,6 +118,7 @@ type VariantSeed = {
   widthCm?: number;
   heightCm?: number;
   depthCm?: number;
+  seatHeightCm?: number;
   isDefault?: boolean;
 };
 
@@ -129,6 +130,8 @@ type ProductSeed = {
   description: string;
   material: string;
   finish?: string;
+  /** El espacio que el mueble necesita alrededor, debajo de la cedula de medidas. */
+  spaceNote?: string;
   personalizable?: boolean;
   customizationNotes?: string;
   customizationFields?: {
@@ -142,6 +145,8 @@ type ProductSeed = {
     hint?: string;
   }[];
   featured?: boolean;
+  /** La misma pieza en el otro material. Se engancha en una segunda pasada. */
+  twinSlug?: string;
   position?: number;
   variants: VariantSeed[];
   photoDir: string;
@@ -169,6 +174,8 @@ const PRODUCTS: ProductSeed[] = [
     ],
     featured: true,
     position: 0,
+    twinSlug: 'sala-campestre-sevilla',
+    spaceNote: 'Cuenta 45 cm entre la sala y la mesa de centro para pasar de frente.',
     variants: [
       {
         sku: 'SG-5P-NAT',
@@ -193,7 +200,7 @@ const PRODUCTS: ProductSeed[] = [
     description: 'Sala modular en L con puf, tejida a mano en fibra color miel. Cojines en lino incluidos.',
     material: 'Fibra sintética',
     finish: 'Tejido color miel',
-    featured: false,
+    featured: true,
     position: 1,
     variants: [
       {
@@ -220,6 +227,7 @@ const PRODUCTS: ProductSeed[] = [
     finish: 'Encerado natural',
     featured: false,
     position: 2,
+    twinSlug: 'sala-guadalajara',
     variants: [
       {
         sku: 'SCS-6P-NAT',
@@ -245,6 +253,8 @@ const PRODUCTS: ProductSeed[] = [
     finish: 'Tejido sol',
     featured: true,
     position: 0,
+    twinSlug: 'comedor-sevilla',
+    spaceNote: 'Para correr las sillas cómodamente, deja 90 cm libres alrededor de la mesa.',
     variants: [
       {
         sku: 'CR-RED-6P',
@@ -280,6 +290,8 @@ const PRODUCTS: ProductSeed[] = [
     ],
     featured: true,
     position: 1,
+    twinSlug: 'comedor-roldanillo',
+    spaceNote: 'Para correr las sillas cómodamente, deja 90 cm libres alrededor de la mesa.',
     variants: [
       { sku: 'CS-8P-CEDRO', name: 'Madera maciza - 8 puestos', seats: 8, isDefault: true },
     ],
@@ -301,6 +313,8 @@ const PRODUCTS: ProductSeed[] = [
     ],
     featured: true,
     position: 0,
+    twinSlug: 'mecedora-palmira',
+    spaceNote: 'Al mecerse necesita 20 cm libres por detrás. Cuenta 90 cm de pared.',
     variants: [
       {
         sku: 'MB-MIM-LIN',
@@ -311,6 +325,7 @@ const PRODUCTS: ProductSeed[] = [
         widthCm: 70,
         heightCm: 105,
         depthCm: 90,
+        seatHeightCm: 44,
         isDefault: true,
       },
     ],
@@ -328,8 +343,10 @@ const PRODUCTS: ProductSeed[] = [
     description: 'Mecedora clásica en madera de sajo curada, con brazos anchos y espaldar alto. Acabado natural.',
     material: 'Madera de sajo',
     finish: 'Natural',
-    featured: false,
+    featured: true,
     position: 1,
+    twinSlug: 'mecedora-buga',
+    spaceNote: 'Al mecerse necesita 20 cm libres por detrás. Cuenta 90 cm de pared.',
     variants: [
       {
         sku: 'MP-SAJO-NAT',
@@ -339,6 +356,7 @@ const PRODUCTS: ProductSeed[] = [
         widthCm: 66,
         heightCm: 108,
         depthCm: 95,
+        seatHeightCm: 42,
         isDefault: true,
       },
     ],
@@ -380,6 +398,42 @@ const PRODUCTS: ProductSeed[] = [
     photos: [{ file: 'butacos-01.webp', alt: 'Butacos con asiento tejido y base en madera, sobre el andén del local' }],
   },
   {
+    name: 'Cama flotante Cañasgordas',
+    slug: 'cama-flotante-canasgordas',
+    categorySlug: 'camas',
+    shortDescription: 'Cabecero en madera maciza sobre base flotante, doble.',
+    description:
+      'Cama con cabecero en madera maciza y base flotante, que deja el piso libre y hace ver '
+      + 'la alcoba más amplia. Se fabrica a la medida del colchón que ya tienes.',
+    material: 'Madera maciza',
+    finish: 'Sellado mate',
+    personalizable: true,
+    customizationNotes: 'Ancho del colchón, alto del cabecero, acabado de la madera.',
+    customizationFields: [
+      { label: 'Ancho del colchón', type: 'number', unit: 'cm', min: 100, max: 200, required: true, hint: 'Doble: 140 cm. Queen: 160 cm' },
+      { label: 'Alto del cabecero', type: 'number', unit: 'cm', min: 80, max: 140 },
+      { label: 'Acabado', type: 'select', options: ['Natural', 'Miel', 'Nogal'], required: true },
+    ],
+    featured: true,
+    position: 0,
+    spaceNote: 'Deja 60 cm libres a cada lado para pasar sin rozar la base.',
+    variants: [
+      {
+        sku: 'CFC-160-MAC',
+        name: 'Base flotante - 160 cm',
+        widthCm: 160,
+        heightCm: 110,
+        depthCm: 200,
+        isDefault: true,
+      },
+    ],
+    photoDir: 'camas',
+    photos: [
+      { file: 'camas-01.webp', alt: 'Cama con cabecero en madera maciza y base flotante, en la alcoba' },
+      { file: 'camas-02.webp', alt: 'Detalle del cabecero en madera maciza de la cama flotante' },
+    ],
+  },
+  {
     name: 'Lámpara Guacarí',
     slug: 'lampara-guacari',
     categorySlug: 'lamparas-tejidas',
@@ -411,7 +465,7 @@ const PRODUCTS: ProductSeed[] = [
     description: 'Espejo redondo con marco tejido a mano en patrón de rayos de sol. 80 cm de diámetro.',
     material: 'Fibra natural',
     finish: 'Natural',
-    featured: false,
+    featured: true,
     position: 0,
     variants: [
       {
@@ -457,6 +511,7 @@ async function seed() {
       description: p.description,
       material: p.material,
       finish: p.finish,
+      spaceNote: p.spaceNote,
       status: 'MADE_TO_ORDER',
       personalizable: p.personalizable ?? false,
       customizationNotes: p.customizationNotes,
@@ -475,6 +530,24 @@ async function seed() {
     });
     await doc.save();
   }
+
+  // Segunda pasada: la pieza gemela se engancha cuando ya existen los dos productos.
+  // updateOne y no save() a proposito: solo toca un ref, no hay denormalizado que
+  // recalcular, y asi no se reescribe el documento entero.
+  console.log('[seed] Enganchando las piezas gemelas...');
+  const idBySlug = new Map<string, unknown>();
+  for (const doc of await Product.find({}).select('slug').lean()) {
+    idBySlug.set(doc.slug, doc._id);
+  }
+  let twins = 0;
+  for (const p of PRODUCTS) {
+    if (!p.twinSlug) continue;
+    const twinId = idBySlug.get(p.twinSlug);
+    if (!twinId) throw new Error(`La gemela "${p.twinSlug}" de "${p.slug}" no existe.`);
+    await Product.updateOne({ slug: p.slug }, { $set: { twinProduct: twinId } });
+    twins++;
+  }
+  console.log(`[seed] ${twins} enlaces tejido/madera listos.`);
 
   const personalizables = PRODUCTS.filter((p) => p.personalizable).map((p) => p.name);
   console.log(

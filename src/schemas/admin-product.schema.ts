@@ -18,6 +18,7 @@ export const variantInputSchema = z.object({
   widthCm: cm.optional(),
   heightCm: cm.optional(),
   depthCm: cm.optional(),
+  seatHeightCm: cm.optional(),
   weightKg: z.number().min(0).max(500).optional(),
   isDefault: z.boolean().optional(),
   active: z.boolean().optional(),
@@ -53,6 +54,7 @@ const productBase = {
   material: z.string().trim().max(80).optional(),
   finish: z.string().trim().max(80).optional(),
   careNotes: z.string().trim().max(2000).optional(),
+  spaceNote: z.string().trim().max(300).optional(),
   warrantyMonths: z.number().int().min(0).max(600).optional(),
   leadTimeDays: z.number().int().min(0).max(365).optional(),
   status: z.enum(PRODUCT_STATUS).optional(),
@@ -61,6 +63,8 @@ const productBase = {
   customizationFields: z.array(customizationFieldInputSchema).max(12).optional(),
   featured: z.boolean().optional(),
   category: objectId,
+  // La misma pieza en el otro material. null desengancha la gemela.
+  twinProduct: objectId.nullable().optional(),
   seo: z
     .object({
       title: z.string().trim().max(120).optional(),

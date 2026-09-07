@@ -52,6 +52,10 @@ const variantSchema = new Schema(
     widthCm: { type: Number, min: 0 },
     heightCm: { type: Number, min: 0 },
     depthCm: { type: Number, min: 0 },
+    // Alto del asiento: en sillas, mecedoras y butacos decide si el mueble sirve para la
+    // mesa que ya se tiene. La ficha lo muestra como una cifra mas de la cedula de
+    // medidas cuando esta (design/PROMPT-4-ficha.md).
+    seatHeightCm: { type: Number, min: 0 },
     weightKg: { type: Number, min: 0 },
     stock: { type: Number, default: 0, min: 0 },
     isDefault: { type: Boolean, default: false },
@@ -83,6 +87,9 @@ const productSchema = new Schema(
     material: { type: String, trim: true },
     finish: { type: String, trim: true },
     careNotes: { type: String },
+    // El espacio que el mueble necesita alrededor: "al mecerse necesita 20 cm libres por
+    // detras". Va debajo de la cedula de medidas y evita media conversacion de WhatsApp.
+    spaceNote: { type: String, trim: true },
     warrantyMonths: { type: Number, min: 0 },
     leadTimeDays: { type: Number, min: 0 }, // dias de fabricacion si es MADE_TO_ORDER
     status: { type: String, enum: PRODUCT_STATUS, default: 'AVAILABLE' },
@@ -94,6 +101,17 @@ const productSchema = new Schema(
     active: { type: Boolean, default: true },
 
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
+
+    /**
+     * La misma pieza en el otro material: la Mecedora Buga tejida apunta a la Mecedora
+     * Palmira de madera. La ficha muestra ese bloque y es una de las tres apariciones
+     * del corte tejido/madera que sostienen el diseno (design/IMPLEMENTACION.md).
+     *
+     * Es un enlace explicito, no se adivina por el nombre: los nombres de las dos
+     * versiones no coinciden. Se pone a mano desde el panel y no tiene que ser
+     * reciproco, aunque lo normal es que lo sea.
+     */
+    twinProduct: { type: Schema.Types.ObjectId, ref: 'Product', default: null },
 
     seo: {
       title: { type: String, trim: true },
