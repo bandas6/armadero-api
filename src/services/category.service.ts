@@ -27,13 +27,25 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
     .sort({ position: 1, name: 1 })
     .lean();
 
-  // Conteo de productos activos por categoria hoja, en una sola agregacion.
-  const counts = await Product.aggregate<{ _id: unknown; count: number }>([
+  /**
+   * Conteo de productos activos por categoria hoja, en una sola agregacion. De paso
+   * saca la foto de un mueble de cada categoria: la reticula del catalogo la usa cuando
+   * la categoria no tiene foto propia, para no quedar en un muro de "Foto pronto".
+   *
+   * El $sort antes del $group hace que la foto sea la del mueble destacado, o si no la
+   * del primero en orden: la que la clienta puso al frente.
+   */
+  const counts = await Product.aggregate<{ _id: unknown; count: number; photo?: string }>([
     { $match: { active: true } },
-    { $group: { _id: '$category', count: { $sum: 1 } } },
+    { $sort: { featured: -1, position: 1, createdAt: -1 } },
+    { $group: { _id: '$category', count: { $sum: 1 }, photo: { $first: '$primaryImageUrl' } } },
   ]);
   const countByCategory = new Map<string, number>();
-  for (const c of counts) countByCategory.set(String(c._id), c.count);
+  const photoByCategory = new Map<string, string>();
+  for (const c of counts) {
+    countByCategory.set(String(c._id), c.count);
+    if (c.photo) photoByCategory.set(String(c._id), c.photo);
+  }
 
   const byId = new Map<string, CategoryNode>();
   for (const c of categories) {
@@ -42,7 +54,8 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
       name: c.name,
       slug: c.slug,
       description: c.description ?? undefined,
-      imageUrl: c.imageUrl ?? undefined,
+      // La foto propia manda; si no hay, la de uno de sus muebles.
+      imageUrl: c.imageUrl ?? photoByCategory.get(String(c._id)) ?? undefined,
       material: (c.material as CategoryMaterial | undefined) ?? undefined,
       position: c.position ?? 0,
       productCount: countByCategory.get(String(c._id)) ?? 0,
