@@ -8,3 +8,6 @@ dist/
 assets/catalogo/
 
 .idea/
+
+# Front clonado por scripts/pruebas-build.sh (entorno de pruebas)
+web/

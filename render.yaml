@@ -1,18 +1,27 @@
+# Entorno de PRUEBAS en Render con un solo servicio gratuito:
+# la API (:3000, interna) y el front SSR (puerto público) corren en el mismo contenedor.
+# El front se clona en el build desde WEB_REPO / WEB_BRANCH (repo público).
 services:
   - type: web
-    name: artemadero-api-pruebas
+    name: artemadero-pruebas
     runtime: node
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
+    buildCommand: bash scripts/pruebas-build.sh
+    startCommand: bash scripts/pruebas-start.sh
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGODB_URI
-        sync: false
-      - key: CORS_ORIGIN
-        sync: false
+      - key: WEB_REPO
+        value: https://github.com/bandas6/armadero.git
+      - key: WEB_BRANCH
+        value: claude/page-redesign-s8g9kf
+      - key: SITE_URL
+        sync: false          # https://artemadero-pruebas.onrender.com
       - key: PUBLIC_SITE_URL
+        sync: false          # la misma URL
+      - key: CORS_ORIGIN
+        sync: false          # la misma URL
+      - key: MONGODB_URI
         sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
