@@ -1,5 +1,5 @@
 import { Product } from '../models/product.model.js';
-import { Category } from '../models/catalog.model.js';
+import { Category, Collection } from '../models/catalog.model.js';
 import { env } from '../lib/env.js';
 
 type UrlEntry = { loc: string; lastmod?: string; changefreq?: string; priority?: string };
@@ -31,9 +31,10 @@ export async function buildSitemap(): Promise<string> {
 
   const base = env.PUBLIC_SITE_URL.replace(/\/$/, '');
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, collections] = await Promise.all([
     Product.find({ active: true }).select('slug updatedAt').sort({ updatedAt: -1 }).lean(),
     Category.find({ active: true }).select('slug parent updatedAt').lean(),
+    Collection.find({ active: true }).select('slug updatedAt').lean(),
   ]);
 
   const isParent = new Set(categories.filter((c) => c.parent).map((c) => String(c.parent)));
@@ -50,6 +51,15 @@ export async function buildSitemap(): Promise<string> {
       lastmod: c.updatedAt ? new Date(c.updatedAt).toISOString().slice(0, 10) : undefined,
       changefreq: 'weekly',
       priority: isParent.has(String(c._id)) ? '0.7' : '0.6',
+    });
+  }
+
+  for (const c of collections) {
+    entries.push({
+      loc: `${base}/coleccion/${encodeURIComponent(c.slug)}`,
+      lastmod: c.updatedAt ? new Date(c.updatedAt).toISOString().slice(0, 10) : undefined,
+      changefreq: 'weekly',
+      priority: '0.7',
     });
   }
 

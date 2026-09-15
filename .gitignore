@@ -6,3 +6,5 @@ dist/
 
 # Contenido bruto o regenerable; las fotos ligeras en assets/fotos sí se versionan.
 assets/catalogo/
+
+.idea/

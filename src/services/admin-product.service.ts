@@ -199,6 +199,23 @@ export async function reorderProducts(orderedIds: string[]) {
   );
 }
 
+/**
+ * Reordena un subconjunto (una categoria, un filtro) sin tocar al resto: los productos
+ * intercambian entre si las posiciones que ya ocupaban, en el orden nuevo. Asi el orden
+ * global se conserva y el arrastre dentro de una categoria no salta a los demas.
+ */
+export async function reorderProductsWithin(orderedIds: string[]) {
+  const docs = await Product.find({ _id: { $in: orderedIds } })
+    .select('position')
+    .lean();
+  const slots = docs.map((d) => d.position ?? 0).sort((a, b) => a - b);
+  // Posiciones repetidas (p. ej. todas en 0) se separan para que el orden sea estable.
+  for (let i = 1; i < slots.length; i++) if (slots[i] <= slots[i - 1]) slots[i] = slots[i - 1] + 1;
+  await Promise.all(
+    orderedIds.map((id, i) => Product.updateOne({ _id: id }, { position: slots[i] ?? i })),
+  );
+}
+
 // --- Imagenes ---
 
 export async function attachImage(

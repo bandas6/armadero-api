@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import {
   loginHandler,
   refreshHandler,
@@ -11,6 +11,8 @@ import * as categories from '../controllers/admin-category.controller.js';
 import * as quotes from '../controllers/admin-quote.controller.js';
 import * as settings from '../controllers/admin-settings.controller.js';
 import { uploadHandler, uploadMiddleware } from '../controllers/admin-upload.controller.js';
+import * as users from '../controllers/admin-user.controller.js';
+import { banners, collections, shippingZones } from '../controllers/admin-content.controller.js';
 
 export const adminRouter = Router();
 
@@ -19,6 +21,7 @@ adminRouter.post('/auth/login', loginHandler);
 adminRouter.post('/auth/refresh', refreshHandler);
 adminRouter.post('/auth/logout', logoutHandler);
 adminRouter.get('/auth/me', requireAuth, meHandler);
+adminRouter.post('/auth/password', requireAuth, users.changePasswordHandler);
 
 // --- Todo lo de abajo exige sesion ---
 adminRouter.use(requireAuth);
@@ -52,6 +55,31 @@ adminRouter.get('/quotes', quotes.listHandler);
 adminRouter.get('/quotes/:id', quotes.getHandler);
 adminRouter.patch('/quotes/:id', quotes.updateHandler);
 
-// --- Ajustes del sitio (Fase 4) ---
-adminRouter.get('/settings', settings.getHandler);
-adminRouter.put('/settings', settings.updateHandler);
+// --- Colecciones / ambientes: contenido, lo edita tambien el EDITOR ---
+adminRouter.patch('/collections/reorder', collections.reorder);
+adminRouter.get('/collections', collections.list);
+adminRouter.post('/collections', collections.create);
+adminRouter.patch('/collections/:id', collections.update);
+adminRouter.post('/collections/:id/active', collections.setActive);
+
+// --- Solo ADMIN: ajustes, banners, zonas de envio y usuarios ---
+// El EDITOR carga muebles, fotos, categorias y colecciones; no toca la configuracion.
+const adminOnly = requireRole('ADMIN');
+
+adminRouter.get('/settings', adminOnly, settings.getHandler);
+adminRouter.put('/settings', adminOnly, settings.updateHandler);
+
+adminRouter.patch('/banners/reorder', adminOnly, banners.reorder);
+adminRouter.get('/banners', adminOnly, banners.list);
+adminRouter.post('/banners', adminOnly, banners.create);
+adminRouter.patch('/banners/:id', adminOnly, banners.update);
+adminRouter.post('/banners/:id/active', adminOnly, banners.setActive);
+
+adminRouter.get('/shipping-zones', adminOnly, shippingZones.list);
+adminRouter.post('/shipping-zones', adminOnly, shippingZones.create);
+adminRouter.patch('/shipping-zones/:id', adminOnly, shippingZones.update);
+adminRouter.post('/shipping-zones/:id/active', adminOnly, shippingZones.setActive);
+
+adminRouter.get('/users', adminOnly, users.listHandler);
+adminRouter.post('/users', adminOnly, users.createHandler);
+adminRouter.patch('/users/:id', adminOnly, users.updateHandler);

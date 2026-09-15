@@ -22,7 +22,6 @@ const baseSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => undefined)),
   PUBLIC_SITE_URL: z.string().url().default('http://localhost:4200'),
-  BUSINESS_HOURS: z.string().optional(),
 
   // --- Autenticacion del panel ---
   JWT_ACCESS_SECRET: z.string().min(16, 'JWT_ACCESS_SECRET necesita al menos 16 caracteres.'),

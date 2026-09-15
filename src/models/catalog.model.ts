@@ -29,6 +29,7 @@ const collectionSchema = new Schema(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String },
     imageUrl: { type: String },
+    imagePublicId: { type: String },
     products: [{ type: Schema.Types.ObjectId, ref: 'Product' }], // el orden del arreglo manda
     position: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
@@ -44,10 +45,27 @@ const siteSettingSchema = new Schema(
     // Internacional sin +, ej 573001234567. Opcional: si esta vacio, la API cae a
     // env.WHATSAPP_NUMBER (ver lib/whatsapp.ts). Cuando esta puesto, gana sobre el env.
     whatsappNumber: { type: String, trim: true },
+    // Horario en dos lineas (pie y hero) — la frase de la ficha se deriva de estas.
+    hoursWeekday: { type: String, trim: true }, // ej. "8:30 a. m. – 5:30 p. m."
+    hoursSaturday: { type: String, trim: true },
+    /** @deprecated una sola linea; queda para documentos viejos. */
     businessHours: { type: String },
     announcement: { type: String },
     instagramUrl: { type: String },
     facebookUrl: { type: String },
+    // Datos del negocio que antes eran constantes PENDIENTE en el front.
+    storeAddress: { type: String, trim: true },
+    foundingYear: { type: Number, min: 1900, max: 2100 },
+    // Preguntas frecuentes del home: el texto se edita, la cantidad (6) y el lugar no.
+    faqs: {
+      type: [
+        new Schema(
+          { q: { type: String, trim: true }, a: { type: String, trim: true } },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
     quoteMessageTemplate: { type: String }, // editable sin desplegar
   },
   { timestamps: true },
@@ -60,6 +78,7 @@ const bannerSchema = new Schema(
     title: { type: String, trim: true },
     subtitle: { type: String, trim: true },
     imageUrl: { type: String, required: true },
+    imagePublicId: { type: String },
     linkUrl: { type: String },
     position: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
@@ -99,6 +118,8 @@ const adminUserSchema = new Schema(
 );
 export const AdminUser = model('AdminUser', adminUserSchema);
 
+export type BannerDoc = InferSchemaType<typeof bannerSchema>;
+export type ShippingZoneDoc = InferSchemaType<typeof shippingZoneSchema>;
 export type CategoryDoc = InferSchemaType<typeof categorySchema>;
 export type CollectionDoc = InferSchemaType<typeof collectionSchema>;
 export type SiteSettingDoc = InferSchemaType<typeof siteSettingSchema>;

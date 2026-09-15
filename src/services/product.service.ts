@@ -199,3 +199,20 @@ export async function listProducts(query: ProductListQuery) {
 
   return { items: items.map((i) => toCard(i as RawCard)), total, page: query.page, pageSize: query.pageSize };
 }
+
+/**
+ * Tarjetas de un conjunto de productos, en el orden de `ids` (el orden del arreglo de una
+ * coleccion manda). Los inactivos se omiten sin dejar hueco.
+ */
+export async function listProductCardsByIds(ids: unknown[]) {
+  if (!ids.length) return [];
+  const docs = await Product.find({ _id: { $in: ids }, active: true })
+    .select(CARD_FIELDS)
+    .populate('category', 'name slug parent material')
+    .lean();
+  const byId = new Map(docs.map((d) => [String(d._id), d]));
+  return ids
+    .map((id) => byId.get(String(id)))
+    .filter((d): d is NonNullable<typeof d> => Boolean(d))
+    .map((d) => toCard(d as RawCard));
+}

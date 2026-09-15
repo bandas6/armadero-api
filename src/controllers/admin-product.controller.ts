@@ -53,8 +53,9 @@ export const setFeaturedHandler = wrap(async (req, res) => {
 });
 
 export const reorderHandler = wrap(async (req, res) => {
-  const { orderedIds } = reorderSchema.parse(req.body);
-  await service.reorderProducts(orderedIds);
+  const { scope, orderedIds } = reorderSchema.parse(req.body);
+  if (scope === 'category') await service.reorderProductsWithin(orderedIds);
+  else await service.reorderProducts(orderedIds);
   res.status(204).end();
 });
 
