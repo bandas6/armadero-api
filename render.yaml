@@ -14,7 +14,7 @@ services:
       - key: WEB_REPO
         value: https://github.com/bandas6/armadero.git
       - key: WEB_BRANCH
-        value: claude/page-redesign-s8g9kf
+        value: main
       - key: SITE_URL
         sync: false          # https://artemadero-pruebas.onrender.com
       - key: PUBLIC_SITE_URL
