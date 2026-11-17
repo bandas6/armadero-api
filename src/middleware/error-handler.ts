@@ -24,6 +24,15 @@ function hasStatus(err: unknown): err is { status: number; message: string } {
   );
 }
 
+function isCloudinaryError(err: unknown): err is { message: string; http_code: number } {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'http_code' in err &&
+    typeof (err as { http_code: unknown }).http_code === 'number'
+  );
+}
+
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({ error: 'No encontrado.', path: req.originalUrl });
 }
@@ -59,6 +68,18 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
 
   if (err instanceof CloudinaryNotConfiguredError) {
     return res.status(503).json({ error: err.message });
+  }
+
+  // Cloudinary rechaza con un objeto plano { message, http_code } (no es un Error ni trae
+  // `status`). Credenciales mal puestas dan 401 "cloud_name mismatch" / "Invalid Signature".
+  if (isCloudinaryError(err)) {
+    console.error('[cloudinary]', err.http_code, err.message);
+    const credentials = err.http_code === 401 || err.http_code === 403;
+    return res.status(502).json({
+      error: credentials
+        ? 'Cloudinary rechazó las credenciales de la API. Revisa CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET.'
+        : `Cloudinary no aceptó la foto: ${err.message}`,
+    });
   }
 
   if (err instanceof ProductNotFoundError || err instanceof QuoteNotFoundError) {
